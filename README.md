@@ -12,6 +12,19 @@ Tree Structure Diagram:
    /     \
   32      33
 
+Testing data:
+
+use the items below to draw a tree data structure diagram
+
+	release11 := releaseTree.ReleaseInput{Ver: "11", FromVer: "", Changes: []releaseTree.Chg{}}
+	release21 := releaseTree.ReleaseInput{Ver: "21", FromVer: "11", Changes: []releaseTree.Chg{{ID: "1"}}}
+	release31 := releaseTree.ReleaseInput{Ver: "31", FromVer: "21", Changes: []releaseTree.Chg{{ID: "2"}, {ID: "3"}, {ID: "4"}}}
+	release22 := releaseTree.ReleaseInput{Ver: "22", FromVer: "21", Changes: []releaseTree.Chg{{ID: "5"}}}
+	release32 := releaseTree.ReleaseInput{Ver: "32", FromVer: "31", Changes: []releaseTree.Chg{{ID: "5"}, {ID: "6"}, {ID: "7"}, {ID: "8"}}}
+	release24 := releaseTree.ReleaseInput{Ver: "24", FromVer: "22", Changes: []releaseTree.Chg{{ID: "6"}, {ID: "7"}}}
+	release33 := releaseTree.ReleaseInput{Ver: "33", FromVer: "31", Changes: []releaseTree.Chg{{ID: "5"}, {ID: "6"}, {ID: "7"}, {ID: "10"}}}
+	release23 := releaseTree.ReleaseInput{Ver: "23", FromVer: "21", Changes: []releaseTree.Chg{{ID: "10"}}}
+
 Test Cases Breakdown (CalcChgs(End, Start)):
 
 TC1: CalcChgs("32", "24")
