@@ -39,10 +39,6 @@ func main() {
 		return
 	}
 	fmt.Println("Initial tree built successfully.")
-	// Cannot directly access tree.root or tree.nodes anymore.
-	// We could add getter methods to releaseTree if needed for verification,
-	// but for now we'll rely on FindLCA/CalcChgs results.
-	fmt.Printf("Tree initialized (verification requires exported methods or getters).\n")
 
 	// --- Insert Remaining Nodes Concurrently ---
 	fmt.Println("\n--- Inserting Remaining Nodes Concurrently ---")
@@ -70,8 +66,7 @@ func main() {
 	fmt.Println("Finished concurrent insertions.")
 
 	// --- Verify Final Tree State (indirectly via exported methods) ---
-	// We cannot directly check len(tree.nodes) or children lists anymore.
-	// We can use FindLCA as a proxy to check if nodes seem correctly linked.
+	// Use FindLCA as a proxy to check if nodes seem correctly linked.
 	fmt.Println("\n--- Verifying Final Tree State (using FindLCA) ---")
 	_, err21_31 := tree.FindLCA("21", "31") // Should be 21
 	_, err21_23 := tree.FindLCA("21", "23") // Should be 21

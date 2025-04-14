@@ -16,17 +16,17 @@ type Chg struct {
 // ReleaseInput represents the raw data for a release node (Exported Type).
 // Used as input for NewReleaseTree and InsertNode.
 type ReleaseInput struct {
-	Ver     string // Exported field
-	FromVer string // Exported field
-	Changes []Chg  // Exported field (slice of Exported type)
+	Ver     string
+	FromVer string
+	Changes []Chg
 }
 
 // node represents a node in the N-ary release tree (unexported).
 type node struct {
-	version  string  // unexported field
-	changes  []Chg   // unexported field (slice of Exported type)
-	parent   *node   // unexported field
-	children []*node // unexported field
+	version  string
+	changes  []Chg
+	parent   *node
+	children []*node
 }
 
 // ReleaseTree holds the entire tree structure.
@@ -34,11 +34,10 @@ type node struct {
 type ReleaseTree struct {
 	nodes map[string]*node // map version string to internal node pointer (unexported)
 	root  *node            // pointer to the internal root node (unexported)
-	mu    sync.RWMutex     // Reader/Writer Mutex for concurrent safety
+	mu    sync.RWMutex
 }
 
 // NewReleaseTree builds the n-ary tree from a slice of input release data.
-// Takes []ReleaseInput (Exported type) and returns *ReleaseTree or error.
 func NewReleaseTree(inputs []ReleaseInput) (*ReleaseTree, error) {
 	tree := &ReleaseTree{
 		nodes: make(map[string]*node),
@@ -55,18 +54,17 @@ func NewReleaseTree(inputs []ReleaseInput) (*ReleaseTree, error) {
 		copy(changesCopy, input.Changes)
 		// Create internal node
 		newNode := &node{
-			version:  input.Ver,   // Use Exported field Ver
-			changes:  changesCopy, // Use Exported type Chg
+			version:  input.Ver,
+			changes:  changesCopy,
 			children: []*node{},
 		}
-		tree.nodes[input.Ver] = newNode // Use Exported field Ver
+		tree.nodes[input.Ver] = newNode
 	}
 
 	// Pass 2: Link nodes
 	foundRoots := 0
 	for _, input := range inputs {
-		newNode := tree.nodes[input.Ver] // Use Exported field Ver
-		// Use Exported field FromVer
+		newNode := tree.nodes[input.Ver]
 		if input.FromVer == "" {
 			if tree.root == nil {
 				tree.root = newNode
@@ -77,10 +75,8 @@ func NewReleaseTree(inputs []ReleaseInput) (*ReleaseTree, error) {
 			foundRoots++
 			continue
 		}
-		// Use Exported field FromVer
 		parent, exists := tree.nodes[input.FromVer]
 		if !exists {
-			// Use Exported fields Ver, FromVer in error message
 			return nil, fmt.Errorf("NewReleaseTree: parent version '%s' for node '%s' not found in input data", input.FromVer, input.Ver)
 		}
 		newNode.parent = parent
@@ -98,44 +94,36 @@ func NewReleaseTree(inputs []ReleaseInput) (*ReleaseTree, error) {
 }
 
 // InsertNode adds a single new release node to the tree concurrently safely.
-// Takes ReleaseInput struct (Exported type).
 func (tree *ReleaseTree) InsertNode(input ReleaseInput) error {
 	tree.mu.Lock()
 	defer tree.mu.Unlock()
 
-	// Use Exported field Ver
 	if _, exists := tree.nodes[input.Ver]; exists {
 		return fmt.Errorf("InsertNode: node with version '%s' already exists", input.Ver)
 	}
 
 	var parent *node = nil
-	// Use Exported field FromVer
 	if input.FromVer == "" {
 		if tree.root != nil {
-			// Use Exported field Ver
 			return fmt.Errorf("InsertNode: cannot insert node '%s' with empty FromVer; tree already has a root ('%s')", input.Ver, tree.root.version)
 		}
 	} else {
-		// Use Exported field FromVer
 		p, exists := tree.nodes[input.FromVer]
 		if !exists {
-			// Use Exported fields Ver, FromVer
 			return fmt.Errorf("InsertNode: parent version '%s' for node '%s' not found", input.FromVer, input.Ver)
 		}
 		parent = p
 	}
 
-	// Use Exported field Changes and type Chg
 	changesCopy := make([]Chg, len(input.Changes))
 	copy(changesCopy, input.Changes)
 	newNode := &node{
-		version:  input.Ver,   // Use Exported field Ver
-		changes:  changesCopy, // Use Exported type Chg
+		version:  input.Ver,
+		changes:  changesCopy,
 		children: []*node{},
 		parent:   parent,
 	}
 
-	// Use Exported field Ver
 	tree.nodes[newNode.version] = newNode
 
 	if parent != nil {
@@ -190,7 +178,6 @@ func (tree *ReleaseTree) FindLCA(version1, version2 string) (string, error) {
 }
 
 // CalcChgs calculates the net changes concurrently safely (Exported).
-// Returns []Chg (Exported type).
 func (tree *ReleaseTree) CalcChgs(endVersion, startVersion string) ([]Chg, error) {
 	tree.mu.RLock()
 	defer tree.mu.RUnlock()
@@ -203,14 +190,12 @@ func (tree *ReleaseTree) CalcChgs(endVersion, startVersion string) ([]Chg, error
 	endNode := tree.nodes[endVersion]
 	startNode := tree.nodes[startVersion]
 
-	netChanges := make(map[string]Chg) // Use Exported type Chg
+	netChanges := make(map[string]Chg)
 
 	// Accumulate End Path Changes
 	curr := endNode
 	for curr != nil && curr != lcaNode {
-		// Use unexported field changes, containing Exported type Chg
 		for _, change := range curr.changes {
-			// Use Exported field ID
 			netChanges[change.ID] = change
 		}
 		curr = curr.parent
@@ -219,37 +204,31 @@ func (tree *ReleaseTree) CalcChgs(endVersion, startVersion string) ([]Chg, error
 	// Subtract Start Path Changes (with Subset Check)
 	curr = startNode
 	for curr != nil && curr != lcaNode {
-		// Use unexported field changes, containing Exported type Chg
 		for _, change := range curr.changes {
-			// Use Exported field ID
 			if _, exists := netChanges[change.ID]; !exists {
-				// Use unexported field version
 				return nil, fmt.Errorf("CalcChgs: change ID '%s' from start path (node '%s', version '%s') not found in end path changes (version '%s' to LCA)",
 					change.ID, curr.version, startVersion, endVersion)
 			}
-			// Use Exported field ID
 			delete(netChanges, change.ID)
 		}
 		curr = curr.parent
 	}
 
 	// Format Output
-	result := make([]Chg, 0, len(netChanges)) // Use Exported type Chg
+	result := make([]Chg, 0, len(netChanges))
 	for _, change := range netChanges {
 		result = append(result, change)
 	}
 
 	// Sort Output
 	sort.Slice(result, func(i, j int) bool {
-		// Use Exported field ID
 		idNumI, errI := strconv.Atoi(result[i].ID)
 		idNumJ, errJ := strconv.Atoi(result[j].ID)
 		if errI == nil && errJ == nil {
 			return idNumI < idNumJ
 		}
-		// Use Exported field ID
 		return result[i].ID < result[j].ID
 	})
 
-	return result, nil // Return slice of Exported type Chg
+	return result, nil
 }
